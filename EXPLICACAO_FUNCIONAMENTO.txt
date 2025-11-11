@@ -1,0 +1,882 @@
+================================================================================
+EXPLICACAO DETALHADA DO FUNCIONAMENTO DO PROGRAMA
+================================================================================
+
+Este documento explica como cada parte do programa funciona, desde a estrutura
+ate a execucao dos algoritmos.
+
+================================================================================
+1. VISAO GERAL DA ARQUITETURA
+================================================================================
+
+O programa e dividido em modulos independentes que podem ser usados separadamente
+ou atraves da interface principal (main.py).
+
+ESTRUTURA:
+---------
+                         main.py
+                  (Interface Principal)
+
+      Menus          Validacao de       Formatacao
+   Interativos         Entrada           de Saida
+
+                         |
+                         | importa
+                         v
+              MODULOS NUMERICOS
+        metodos_diretos.py
+        metodos_iterativos.py
+        interpolacao_minimos_quadrados.py
+        integracao_numerica.py
+
+                         |
+                         | usa
+                         v
+                  NumPy/Python
+                   (Biblioteca)
+
+================================================================================
+2. MODULO: metodos_diretos.py
+================================================================================
+
+PROPOSITO:
+----------
+Resolver sistemas de equacoes lineares Ax = b usando metodos que obtem a
+solucao em um numero finito de operacoes.
+
+FUNCIONAMENTO DE CADA METODO:
+-----------------------------
+
+--------------------------------------------------------------------------------
+2.1 ELIMINACAO DE GAUSS
+--------------------------------------------------------------------------------
+
+ALGORITMO:
+1. Cria matriz aumentada [A|b]
+2. Fase de ELIMINACAO (triangularizacao):
+   Para cada linha k:
+   - Escolhe pivo (maior elemento da coluna, se pivoteamento ativado)
+   - Troca linhas se necessario
+   - Elimina elementos abaixo do pivo:
+     Para cada linha i abaixo de k:
+     fator = A[i,k] / A[k,k]
+     A[i] = A[i] - fator * A[k]
+
+3. Fase de SUBSTITUICAO REGRESSIVA:
+   Resolve de baixo para cima:
+   x[n-1] = b[n-1] / A[n-1,n-1]
+   x[i] = (b[i] - soma A[i,j]*x[j]) / A[i,i]
+
+EXEMPLO DE EXECUCAO:
+Sistema: 2x + y = 5
+         x + 3y = 8
+
+Matriz aumentada inicial:
+[2  1 | 5]
+[1  3 | 8]
+
+Apos eliminacao (zerar elemento [1,0]):
+fator = 1/2 = 0.5
+[2  1   | 5  ]
+[0  2.5 | 5.5]
+
+Substituicao regressiva:
+y = 5.5/2.5 = 2.2
+x = (5 - 1*2.2)/2 = 1.4
+
+CODIGO:
+-------
+def eliminacao_gauss(A, b, pivoteamento=True):
+    n = len(b)
+    Ab = np.column_stack([A, b])  # Cria [A|b]
+    
+    # Eliminacao
+    for k in range(n-1):
+        if pivoteamento:
+            max_idx = np.argmax(np.abs(Ab[k:n, k])) + k
+            Ab[[k, max_idx]] = Ab[[max_idx, k]]
+        
+        for i in range(k+1, n):
+            fator = Ab[i, k] / Ab[k, k]
+            Ab[i, k:] -= fator * Ab[k, k:]
+    
+    # Substituicao regressiva
+    x = np.zeros(n)
+    for i in range(n-1, -1, -1):
+        x[i] = (Ab[i, -1] - np.dot(Ab[i, i+1:n], x[i+1:n])) / Ab[i, i]
+    
+    return x
+
+
+--------------------------------------------------------------------------------
+2.2 GAUSS-JORDAN
+--------------------------------------------------------------------------------
+
+DIFERENCA DO GAUSS:
+- Gauss: Transforma em triangular superior -> substituicao regressiva
+- Gauss-Jordan: Transforma em diagonal -> le solucao diretamente
+
+ALGORITMO:
+1. Para cada pivo na diagonal:
+   - Divide linha pelo pivo (normaliza)
+   - Elimina TODOS os outros elementos da coluna (acima e abaixo)
+2. Resultado: matriz identidade + solucao no vetor aumentado
+
+EXEMPLO:
+[2  1 | 5]  ->  [1  0 | 1.4]
+[1  3 | 8]      [0  1 | 2.2]
+
+Leitura direta: x = 1.4, y = 2.2
+
+
+--------------------------------------------------------------------------------
+2.3 DECOMPOSICAO LU
+--------------------------------------------------------------------------------
+
+CONCEITO:
+Fatorar A = L * U, onde:
+- L: triangular inferior com diagonal = 1
+- U: triangular superior
+
+VANTAGEM:
+Resolver multiplos sistemas com mesma matriz A mas diferentes b's.
+Fatoracao uma vez -> usar varias vezes
+
+ALGORITMO:
+1. DECOMPOSICAO (faz uma vez):
+   L = identidade
+   U = A
+   Para k = 0 ate n-1:
+     Para i = k+1 ate n:
+       fator = U[i,k] / U[k,k]
+       L[i,k] = fator
+       U[i,k:] -= fator * U[k,k:]
+
+2. RESOLUCAO (para cada b diferente):
+   a) Ly = b  (substituicao progressiva)
+   b) Ux = y  (substituicao regressiva)
+
+EXEMPLO:
+A = [4  -1]    ->    L = [1   0]    U = [4  -1]
+    [-1  4]          [-0.25  1]        [0  3.75]
+
+Para resolver: primeiro Ly=b, depois Ux=y
+
+
+--------------------------------------------------------------------------------
+2.4 DECOMPOSICAO DE CHOLESKY
+--------------------------------------------------------------------------------
+
+REQUISITO:
+Matriz simetrica positiva definida (todos autovalores > 0)
+
+DECOMPOSICAO:
+A = L * L^T  (L triangular inferior)
+
+VANTAGEM:
+- Mais eficiente que LU (metade das operacoes)
+- Numericamente mais estavel
+
+ALGORITMO:
+Para i = 0 ate n:
+  Para j = 0 ate i:
+    Se i == j:
+      L[i,j] = sqrt(A[i,i] - soma L[i,k]^2)
+    Senao:
+      L[i,j] = (A[i,j] - soma L[i,k]*L[j,k]) / L[j,j]
+
+EXEMPLO:
+A = [4  2]    ->    L = [2    0  ]
+    [2  5]          [1  2.236]
+
+Verificar: L*L^T = A
+
+
+================================================================================
+3. MODULO: metodos_iterativos.py
+================================================================================
+
+PROPOSITO:
+----------
+Resolver sistemas Ax = b atraves de iteracoes sucessivas, partindo de uma
+aproximacao inicial ate convergir para a solucao.
+
+VANTAGENS:
+- Bons para matrizes grandes e esparsas
+- Requerem menos memoria que metodos diretos
+- Podem ser paralelizados
+
+CONDICAO DE CONVERGENCIA:
+-------------------------
+Matriz diagonalmente dominante: |A[i,i]| > soma|A[i,j]| (j!=i)
+
+
+--------------------------------------------------------------------------------
+3.1 METODO DE JACOBI
+--------------------------------------------------------------------------------
+
+IDEIA:
+Isolar cada variavel e calcular nova aproximacao usando valores ANTIGOS
+
+FORMULA ITERATIVA:
+x[i]^(k+1) = (b[i] - soma(j!=i) A[i,j]*x[j]^(k)) / A[i,i]
+
+ALGORITMO:
+1. Inicializa x = [0, 0, ..., 0] (ou outro valor)
+2. Enquanto nao convergiu:
+   Para cada i:
+     x_new[i] = (b[i] - soma de A[i,j]*x_old[j]) / A[i,i]
+   Calcula erro = ||x_new - x_old||
+   Se erro < tolerancia: PARA
+   x_old = x_new
+
+EXEMPLO:
+Sistema: 4x + y = 5
+         x + 4y = 5
+
+Iteracao 0: x=0, y=0
+Iteracao 1: x=(5-0)/4=1.25, y=(5-0)/4=1.25
+Iteracao 2: x=(5-1.25)/4=0.9375, y=(5-1.25)/4=0.9375
+Iteracao 3: x=(5-0.9375)/4=1.015625, y=...
+... converge para x=1, y=1
+
+CARACTERISTICAS:
+- Usa valores da iteracao ANTERIOR
+- Pode ser paralelizado (cada x[i] independente)
+- Convergencia mais lenta que Gauss-Seidel
+
+
+--------------------------------------------------------------------------------
+3.2 METODO DE GAUSS-SEIDEL
+--------------------------------------------------------------------------------
+
+DIFERENCA DO JACOBI:
+Usa valores JA ATUALIZADOS na mesma iteracao
+
+FORMULA:
+x[i]^(k+1) = (b[i] - soma(j<i) A[i,j]*x[j]^(k+1) - soma(j>i) A[i,j]*x[j]^(k)) / A[i,i]
+                    valores novos               valores antigos
+
+ALGORITMO:
+1. Inicializa x = [0, 0, ..., 0]
+2. Enquanto nao convergiu:
+   Para cada i:
+     x[i] = (b[i] - soma dos ja calculados - soma dos antigos) / A[i,i]
+     # x[i] e atualizado IMEDIATAMENTE
+   Calcula erro
+   Se erro < tolerancia: PARA
+
+VANTAGENS SOBRE JACOBI:
+- Converge mais rapido (usa informacao mais recente)
+- Nao precisa armazenar x_old separadamente
+
+EXEMPLO (mesmo sistema):
+Sistema: 4x + y = 5
+         x + 4y = 5
+
+Iteracao 0: x=0, y=0
+Iteracao 1: x=(5-0)/4=1.25
+            y=(5-1.25)/4=0.9375  <- usa x=1.25 ja calculado!
+Iteracao 2: x=(5-0.9375)/4=1.015625
+            y=(5-1.015625)/4=0.996...
+... converge mais rapido!
+
+
+--------------------------------------------------------------------------------
+3.3 METODO SOR (Successive Over-Relaxation)
+--------------------------------------------------------------------------------
+
+IDEIA:
+Acelerar Gauss-Seidel aplicando um fator de relaxacao omega
+
+FORMULA:
+x[i]^(k+1) = (1-omega)*x[i]^(k) + omega*x_GS[i]
+             valor antigo         valor Gauss-Seidel
+
+PARAMETRO omega:
+- omega = 1: Gauss-Seidel normal
+- 1 < omega < 2: Sobre-relaxacao (acelera convergencia)
+- 0 < omega < 1: Sub-relaxacao (pode estabilizar casos dificeis)
+
+ALGORITMO:
+1. Escolhe omega (tipicamente entre 1.1 e 1.5)
+2. Para cada iteracao:
+   Para cada i:
+     x_gs = (b[i] - somas) / A[i,i]
+     x[i] = (1-omega)*x[i] + omega*x_gs
+   Calcula erro
+   Se erro < tolerancia: PARA
+
+ESCOLHA DE omega:
+- omega otimo depende da matriz
+- Muito grande: pode divergir
+- Muito pequeno: converge devagar
+- Tipicamente testa-se valores entre 1.0 e 1.8
+
+
+================================================================================
+4. MODULO: interpolacao_minimos_quadrados.py
+================================================================================
+
+PROPOSITO:
+----------
+Estimar valores entre pontos conhecidos (interpolacao) ou ajustar curvas
+a dados experimentais (ajuste/regressao).
+
+
+--------------------------------------------------------------------------------
+4.1 INTERPOLACAO DE LAGRANGE
+--------------------------------------------------------------------------------
+
+OBJETIVO:
+Encontrar polinomio que PASSA por todos os pontos dados
+
+FORMULA:
+P(x) = soma y[i] * L[i](x)
+
+onde L[i](x) = produto(j!=i) (x - x[j]) / (x[i] - x[j])
+
+CARACTERISTICAS DOS POLINOMIOS L[i]:
+- L[i](x[i]) = 1  (no proprio ponto)
+- L[i](x[j]) = 0  (nos outros pontos)
+
+ALGORITMO:
+1. Para cada ponto i, constroi L[i](x)
+2. P(x) = soma de y[i] * L[i](x)
+
+EXEMPLO:
+Pontos: (0,1), (1,2), (2,5)
+
+L[0](x) = (x-1)(x-2) / [(0-1)(0-2)] = (x-1)(x-2) / 2
+L[1](x) = (x-0)(x-2) / [(1-0)(1-2)] = -x(x-2)
+L[2](x) = (x-0)(x-1) / [(2-0)(2-1)] = x(x-1) / 2
+
+P(x) = 1*L[0](x) + 2*L[1](x) + 5*L[2](x)
+
+Calcular P(1.5):
+L[0](1.5) = (1.5-1)(1.5-2)/2 = 0.125
+L[1](1.5) = -1.5(1.5-2) = 0.75
+L[2](1.5) = 1.5(1.5-1)/2 = 0.375
+P(1.5) = 1*0.125 + 2*0.75 + 5*0.375 = 3.5
+
+VANTAGENS:
+- Facil de entender
+- Adicionar ponto nao requer recalcular tudo
+
+DESVANTAGENS:
+- Custo computacional alto para muitos pontos
+- Instavel numericamente para muitos pontos
+
+
+--------------------------------------------------------------------------------
+4.2 INTERPOLACAO DE NEWTON
+--------------------------------------------------------------------------------
+
+OBJETIVO:
+Mesmo que Lagrange, mas forma mais eficiente
+
+FORMULA:
+P(x) = a[0] + a[1](x-x[0]) + a[2](x-x[0])(x-x[1]) + ...
+
+DIFERENCAS DIVIDIDAS:
+Tabela para calcular coeficientes a[i]:
+
+      x    |   f[x]  | f[x,x] | f[x,x,x]
+    -------|---------|--------|----------
+      x[0] | y[0]    |        |
+                      | a[1]   |
+      x[1] | y[1]    |        | a[2]
+                      | ...    |
+      x[2] | y[2]    |        |
+
+f[x[i],x[i+1]] = (y[i+1] - y[i]) / (x[i+1] - x[i])
+f[x[i],x[i+1],x[i+2]] = (f[x[i+1],x[i+2]] - f[x[i],x[i+1]]) / (x[i+2] - x[i])
+
+ALGORITMO:
+1. Constroi tabela de diferencas divididas
+2. Coeficientes = primeira linha da tabela
+3. Avalia P(x) usando forma de Newton
+
+VANTAGENS SOBRE LAGRANGE:
+- Adicionar ponto: so adiciona um termo
+- Mais eficiente computacionalmente
+- Numericamente mais estavel
+
+EXEMPLO:
+Pontos: (0,1), (1,2), (2,5)
+
+Tabela:
+  0  |  1  |     |
+     |     | 1   |
+  1  |  2  |     | 2
+     |     | 3   |
+  2  |  5  |     |
+
+Coeficientes: [1, 1, 2]
+P(x) = 1 + 1(x-0) + 2(x-0)(x-1)
+     = 1 + x + 2x(x-1)
+     = 2x^2 - x + 1
+
+
+--------------------------------------------------------------------------------
+4.3 MINIMOS QUADRADOS
+--------------------------------------------------------------------------------
+
+DIFERENCA DA INTERPOLACAO:
+- Interpolacao: PASSA por todos os pontos
+- Minimos Quadrados: APROXIMA os pontos (minimiza erro)
+
+QUANDO USAR:
+- Dados com ruido/erro experimental
+- Mais pontos que grau do polinomio desejado
+- Buscar tendencia geral
+
+OBJETIVO:
+Minimizar soma (y[i] - f(x[i]))^2
+
+AJUSTE LINEAR: y = ax + b
+------------------------------
+Minimizar E = soma (y[i] - (ax[i] + b))^2
+
+Derivar e igualar a zero:
+dE/da = 0
+dE/db = 0
+
+SISTEMA NORMAL:
+[soma x^2   soma x ] [a]   [soma xy]
+[soma x     n      ] [b] = [soma y ]
+
+Solucao:
+a = (n*soma xy - soma x*soma y) / (n*soma x^2 - (soma x)^2)
+b = (soma y - a*soma x) / n
+
+AJUSTE POLINOMIAL: y = a[n]*x^n + ... + a[1]*x + a[0]
+------------------------------------------------------
+Matriz de Vandermonde:
+       [1  x[0]  x[0]^2  ...  x[0]^n]
+   A = [1  x[1]  x[1]^2  ...  x[1]^n]
+       [............................ ]
+
+Sistema normal: A^T * A * c = A^T * y
+
+QUALIDADE DO AJUSTE:
+-------------------
+R^2 (coeficiente de determinacao):
+R^2 = 1 - SS_res/SS_tot
+onde:
+- SS_res = soma(y[i] - y_ajustado[i])^2  (erro residual)
+- SS_tot = soma(y[i] - y_medio)^2        (variacao total)
+
+R^2 pertence [0, 1]:
+- R^2 = 1: ajuste perfeito
+- R^2 = 0: ajuste nao melhor que media
+
+
+================================================================================
+5. MODULO: integracao_numerica.py
+================================================================================
+
+PROPOSITO:
+----------
+Calcular integral[a,b] f(x) dx quando nao ha primitiva analitica ou ela e complexa
+
+
+--------------------------------------------------------------------------------
+5.1 REGRA DO TRAPEZIO
+--------------------------------------------------------------------------------
+
+IDEIA:
+Aproximar area sob curva por trapezios
+
+FORMULA (1 subintervalo):
+integral[a,b] f(x) dx ~ (b-a) * [f(a) + f(b)] / 2
+
+FORMULA COMPOSTA (n subintervalos):
+h = (b-a)/n
+integral ~ h * [f(a)/2 + f(x[1]) + f(x[2]) + ... + f(x[n-1]) + f(b)/2]
+
+ALGORITMO:
+1. Divide [a,b] em n partes iguais
+2. Calcula h = (b-a)/n
+3. soma = (f(a) + f(b))/2
+4. Para i=1 ate n-1:
+      soma += f(a + i*h)
+5. Integral ~ h * soma
+
+ERRO:
+E = -(b-a)^3/(12n^2) * f''(xi)  para algum xi em [a,b]
+
+CARACTERISTICAS:
+- Simples de implementar
+- Erro O(h^2)
+- Bom para funcoes suaves
+
+
+--------------------------------------------------------------------------------
+5.2 REGRA DE SIMPSON 1/3
+--------------------------------------------------------------------------------
+
+IDEIA:
+Aproximar curva por parabolas (polinomio grau 2)
+
+REQUISITO:
+n deve ser PAR
+
+FORMULA:
+h = (b-a)/n
+integral ~ (h/3) * [f(a) + 4*soma f(impares) + 2*soma f(pares) + f(b)]
+
+ALGORITMO:
+1. Divide [a,b] em n partes (n par)
+2. h = (b-a)/n
+3. soma = f(a) + f(b)
+4. Para i=1,3,5,...,n-1 (impares):
+      soma += 4*f(a + i*h)
+5. Para i=2,4,6,...,n-2 (pares):
+      soma += 2*f(a + i*h)
+6. Integral ~ (h/3) * soma
+
+ERRO:
+E = -(b-a)^5/(180n^4) * f^(4)(xi)
+
+CARACTERISTICAS:
+- Mais preciso que Trapezio
+- Erro O(h^4)
+- Exato para polinomios de grau <= 3
+
+
+--------------------------------------------------------------------------------
+5.3 REGRA DE SIMPSON 3/8
+--------------------------------------------------------------------------------
+
+IDEIA:
+Similar a 1/3, mas usa 3 subintervalos por vez
+
+REQUISITO:
+n deve ser multiplo de 3
+
+FORMULA:
+integral ~ (3h/8) * [f(x[0]) + 3*f(x[1]) + 3*f(x[2]) + 2*f(x[3]) + ...]
+
+QUANDO USAR:
+- n nao e par (nao pode usar Simpson 1/3)
+- Mesma precisao que 1/3
+
+
+--------------------------------------------------------------------------------
+5.4 QUADRATURA DE GAUSS
+--------------------------------------------------------------------------------
+
+IDEIA:
+Escolher pontos e pesos OTIMOS para maximizar precisao
+
+FORMULA GERAL:
+integral[-1,1] f(x) dx ~ soma w[i] * f(x[i])
+
+Para intervalo [a,b], transformar:
+integral[a,b] f(x) dx = ((b-a)/2) * integral[-1,1] f((b-a)t/2 + (b+a)/2) dt
+
+QUADRATURA COM 2 PONTOS:
+Pontos: x = +/-1/sqrt(3)
+Pesos: w = 1
+Exata para polinomios grau <= 3
+
+QUADRATURA COM 3 PONTOS:
+Pontos: x = -sqrt(3/5), 0, sqrt(3/5)
+Pesos: w = 5/9, 8/9, 5/9
+Exata para polinomios grau <= 5
+
+QUADRATURA COM n PONTOS:
+Exata para polinomios grau <= 2n-1
+
+CARACTERISTICAS:
+- Muito preciso com poucos pontos
+- Pontos nao sao uniformemente espacados
+- Otimo para integrais suaves
+- Usa zeros de polinomios de Legendre
+
+
+================================================================================
+6. FUNCIONAMENTO DO main.py (INTERFACE PRINCIPAL)
+================================================================================
+
+ESTRUTURA:
+----------
+
+main()
+  |
+  |- exibir_menu_principal()
+  |     |- [1] menu_metodos_diretos()
+  |     |     |- executar_metodo_direto_especifico()
+  |     |     |- sistema_personalizado_direto()
+  |     |
+  |     |- [2] menu_metodos_iterativos()
+  |     |     |- executar_metodo_iterativo_especifico()
+  |     |
+  |     |- [3] menu_interpolacao_minimos_quadrados()
+  |     |     |- executar_interpolacao_especifica()
+  |     |
+  |     |- [4] menu_integracao_numerica()
+  |     |     |- executar_integracao_especifica()
+  |     |
+  |     |- [5] executar_todos_testes()
+  |
+  |- Loop ate usuario escolher [0] SAIR
+
+FLUXO DE EXECUCAO:
+-----------------
+
+1. INICIALIZACAO:
+   - Importa todos os modulos numericos
+   - Importa numpy para arrays
+   - Prepara funcoes auxiliares (limpar_tela, pausar)
+
+2. LOOP PRINCIPAL:
+   while True:
+     - Limpa tela
+     - Exibe menu
+     - Recebe opcao do usuario
+     - Chama funcao correspondente
+     - Se opcao = 0: break (sai)
+
+3. SUBMENUS:
+   - Cada categoria tem seu submenu
+   - Opcoes para metodos especificos ou exemplos
+   - Permite entrada de dados personalizados
+
+4. EXECUCAO DE METODO:
+   a) Prepara dados (exemplo ou entrada do usuario)
+   b) Chama funcao do modulo apropriado
+   c) Recebe resultado
+   d) Formata e exibe resultado
+   e) Calcula metricas (erro, residuo, etc.)
+   f) Pausa para usuario ver resultado
+
+5. VALIDACAO:
+   - Verifica entrada do usuario
+   - Trata erros (try/except)
+   - Exibe mensagens informativas
+
+EXEMPLO DE FLUXO:
+----------------
+
+Usuario executa: python main.py
+
+1. Exibe menu principal
+2. Usuario digita: 1 (Metodos Diretos)
+3. Exibe submenu de metodos diretos
+4. Usuario digita: 1 (Eliminacao de Gauss)
+5. Carrega sistema exemplo
+6. Chama: md.eliminacao_gauss(A, b)
+7. Recebe solucao x
+8. Calcula residuo: ||Ax - b||
+9. Exibe:
+   - Sistema original
+   - Solucao encontrada
+   - Verificacao (Ax)
+   - Residuo
+10. Pausa (pressione Enter)
+11. Volta ao submenu
+
+
+================================================================================
+7. FLUXO DE DADOS
+================================================================================
+
+ENTRADA -> PROCESSAMENTO -> SAIDA
+
+EXEMPLO COMPLETO: Resolver sistema linear
+-----------------------------------------
+
+1. ENTRADA:
+   Usuario em main.py:
+   - Escolhe "Metodos Diretos" -> "Eliminacao de Gauss"
+   
+   Dados carregados:
+   A = [[4, -1, 0],
+        [-1, 4, -1],
+        [0, -1, 3]]
+   b = [15, 10, 10]
+
+2. CONVERSAO:
+   A_float = np.array(A, dtype=float)
+   b_float = np.array(b, dtype=float)
+
+3. CHAMADA:
+   x = metodos_diretos.eliminacao_gauss(A_float, b_float)
+
+4. PROCESSAMENTO (dentro do modulo):
+   a) Cria matriz aumentada: Ab = [A|b]
+   b) Fase de eliminacao:
+      - Escolhe pivo
+      - Elimina abaixo
+      Resultado: matriz triangular superior
+   c) Fase de substituicao:
+      - Calcula x[n-1]
+      - Calcula x[n-2] usando x[n-1]
+      - ...
+      - Calcula x[0]
+   d) Retorna: x = [5, 5, 5]
+
+5. VALIDACAO (de volta ao main.py):
+   verificacao = np.dot(A_float, x)
+   residuo = np.linalg.norm(verificacao - b_float)
+
+6. SAIDA:
+   Imprime:
+   "Solucao: [5. 5. 5.]"
+   "Verificacao Ax = [15. 10. 10.]"
+   "Residuo: 5.02e-15"
+
+
+================================================================================
+8. OTIMIZACOES E BOAS PRATICAS IMPLEMENTADAS
+================================================================================
+
+1. MODULARIDADE:
+   - Cada metodo em funcao separada
+   - Modulos independentes
+   - Facil manutencao e teste
+
+2. DOCUMENTACAO:
+   - Docstrings em todas as funcoes
+   - Comentarios explicativos
+   - Exemplos incluidos
+
+3. TRATAMENTO DE ERROS:
+   - Verifica pivo zero
+   - Verifica convergencia
+   - Try/except para entrada de usuario
+   - Mensagens claras de erro
+
+4. EFICIENCIA:
+   - Usa NumPy (operacoes vetorizadas)
+   - Evita loops desnecessarios
+   - Reutiliza decomposicoes (LU, Cholesky)
+
+5. VALIDACAO:
+   - Calcula residuos
+   - Verifica condicoes (diagonal dominante)
+   - Compara com solucao exata quando possivel
+
+6. USABILIDADE:
+   - Menu intuitivo
+   - Exemplos prontos
+   - Opcao de dados personalizados
+   - Feedback visual (limpar tela, pausas)
+
+
+================================================================================
+9. COMO ADICIONAR NOVO METODO
+================================================================================
+
+EXEMPLO: Adicionar metodo de Newton-Raphson para raizes
+
+1. ESCOLHER MODULO ou criar novo:
+   Criar: metodos_raizes.py
+
+2. IMPLEMENTAR FUNCAO:
+   def newton_raphson(f, df, x0, tol=1e-6, max_iter=100):
+       """
+       Encontra raiz de f(x) = 0
+       
+       Args:
+           f: funcao
+           df: derivada de f
+           x0: aproximacao inicial
+           tol: tolerancia
+           max_iter: maximo de iteracoes
+       
+       Returns:
+           raiz, numero de iteracoes
+       """
+       x = x0
+       for i in range(max_iter):
+           fx = f(x)
+           if abs(fx) < tol:
+               return x, i+1
+           x = x - fx / df(x)
+       return x, max_iter
+
+3. ADICIONAR TESTE:
+   def teste_newton():
+       f = lambda x: x**2 - 4
+       df = lambda x: 2*x
+       raiz, iters = newton_raphson(f, df, 1.0)
+       print(f"Raiz: {raiz}, Iteracoes: {iters}")
+
+4. INTEGRAR NO main.py:
+   - Importar: import metodos_raizes as mr
+   - Adicionar opcao no menu
+   - Criar funcao de execucao
+
+5. DOCUMENTAR:
+   - Atualizar README.md
+   - Adicionar exemplo em exemplos.py
+   - Adicionar teste em testes.py
+
+
+================================================================================
+10. DICAS DE USO E TROUBLESHOOTING
+================================================================================
+
+QUANDO USAR CADA METODO:
+------------------------
+
+SISTEMAS LINEARES:
+- Pequeno (< 100): Metodos diretos (Gauss, LU)
+- Grande esparso: Metodos iterativos (Gauss-Seidel)
+- Simetrico positivo definido: Cholesky
+- Multiplos b's: Decomposicao LU
+
+INTERPOLACAO vs AJUSTE:
+- Dados exatos: Interpolacao (Lagrange, Newton)
+- Dados com ruido: Ajuste (Minimos Quadrados)
+- Poucos pontos: Interpolacao
+- Muitos pontos: Ajuste
+
+INTEGRACAO:
+- Funcao suave: Simpson ou Gauss
+- Funcao oscilante: Trapezio com muitos pontos
+- Alta precisao: Gauss com 4+ pontos
+- Simplicidade: Trapezio
+
+PROBLEMAS COMUNS:
+----------------
+
+1. "Pivo zero encontrado"
+   -> Matriz singular, sistema sem solucao unica
+   -> Tente pivoteamento ou verifique sistema
+
+2. "Metodo nao converge"
+   -> Matriz nao diagonalmente dominante
+   -> Tente metodo direto ou aumente max_iter
+
+3. "Erro muito grande"
+   -> Aumente numero de subintervalos (integracao)
+   -> Use metodo de ordem superior
+   -> Verifique se funcao e suave
+
+4. "R^2 negativo ou > 1"
+   -> Erro na implementacao
+   -> Dados muito ruins para o modelo
+
+
+================================================================================
+FIM DA EXPLICACAO
+================================================================================
+
+Este documento cobriu:
+- Arquitetura do sistema
+- Funcionamento de cada metodo numerico
+- Algoritmos detalhados com exemplos
+- Fluxo de execucao do programa
+- Como os dados fluem entre modulos
+- Boas praticas implementadas
+- Como estender o programa
+
+Para mais informacoes:
+- Leia o codigo-fonte comentado
+- Execute os exemplos (exemplos.py)
+- Teste os modulos individualmente
+- Consulte README.md para visao geral
