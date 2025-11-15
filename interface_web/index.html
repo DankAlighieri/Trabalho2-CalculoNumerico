@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo Numérico - Interface Web</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">Cálculo Numérico</h1>
+            <p class="subtitle">Resolva problemas usando métodos numéricos</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="diretos">
+                <span class="tab-icon">⚡</span>
+                Métodos Diretos
+            </button>
+            <button class="tab-button" data-tab="iterativos">
+                <span class="tab-icon">🔄</span>
+                Métodos Iterativos
+            </button>
+            <button class="tab-button" data-tab="interpolacao">
+                <span class="tab-icon">📈</span>
+                Interpolação
+            </button>
+            <button class="tab-button" data-tab="integracao">
+                <span class="tab-icon">∫</span>
+                Integração
+            </button>
+        </nav>
+
+        <!-- Tab Content: Métodos Diretos -->
+        <div id="diretos" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">Métodos Diretos</h2>
+                <p class="card-description">Resolva sistemas lineares Ax = b usando métodos exatos</p>
+
+                <div class="form-group">
+                    <label for="matriz-a">Matriz A (uma linha por linha, valores separados por vírgula)</label>
+                    <textarea id="matriz-a" rows="4" placeholder="Ex: 4, 3, 2&#10;1, 3, 1&#10;2, 1, 3">4, 3, 2
+1, 3, 1
+2, 1, 3</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="vetor-b">Vetor b (valores separados por vírgula)</label>
+                    <input type="text" id="vetor-b" placeholder="Ex: 960, 510, 610" value="960, 510, 610">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="executarGauss()">
+                        <span class="btn-icon">⚡</span>
+                        Eliminação de Gauss
+                    </button>
+                    <button class="btn btn-secondary" onclick="executarLU()">
+                        <span class="btn-icon">📐</span>
+                        Fatoração LU
+                    </button>
+                    <button class="btn btn-ghost" onclick="limparDiretos()">
+                        <span class="btn-icon">🗑️</span>
+                        Limpar
+                    </button>
+                </div>
+
+                <div id="resultado-diretos" class="result-box"></div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Métodos Iterativos -->
+        <div id="iterativos" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Métodos Iterativos</h2>
+                <p class="card-description">Resolva sistemas lineares usando métodos iterativos</p>
+
+                <div class="form-group">
+                    <label for="matriz-iter">Matriz A</label>
+                    <textarea id="matriz-iter" rows="5" placeholder="Digite a matriz...">10, -1, -1, 0, 0
+-1, 15, 0, -2, 0
+-1, 0, 12, -1, 0
+0, -2, -1, 20, -1
+0, 0, 0, -1, 8</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="vetor-iter">Vetor b</label>
+                    <input type="text" id="vetor-iter" placeholder="Digite o vetor..." value="12, 25, 10, 30, 15">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tolerancia">Tolerância</label>
+                        <input type="text" id="tolerancia" placeholder="0.0001" value="0.0001">
+                    </div>
+                    <div class="form-group">
+                        <label for="max-iter">Máx. Iterações</label>
+                        <input type="number" id="max-iter" placeholder="1000" value="1000">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="executarGaussSeidel()">
+                        <span class="btn-icon">🔄</span>
+                        Gauss-Seidel
+                    </button>
+                    <button class="btn btn-secondary" onclick="executarJacobi()">
+                        <span class="btn-icon">🔄</span>
+                        Jacobi
+                    </button>
+                    <button class="btn btn-ghost" onclick="limparIterativos()">
+                        <span class="btn-icon">🗑️</span>
+                        Limpar
+                    </button>
+                </div>
+
+                <div id="resultado-iterativos" class="result-box"></div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Interpolação -->
+        <div id="interpolacao" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Interpolação e Mínimos Quadrados</h2>
+                <p class="card-description">Encontre valores em conjuntos de dados</p>
+
+                <div class="form-group">
+                    <label for="pontos-x">Pontos X (valores separados por vírgula)</label>
+                    <input type="text" id="pontos-x" placeholder="Ex: 1, 2, 3, 4, 5" value="1, 2, 3, 4, 5">
+                </div>
+
+                <div class="form-group">
+                    <label for="pontos-y">Pontos Y (valores separados por vírgula)</label>
+                    <input type="text" id="pontos-y" placeholder="Ex: 2.0, 2.3, 2.8, 3.1, 3.5" value="2.0, 2.3, 2.8, 3.1, 3.5">
+                </div>
+
+                <div class="form-group">
+                    <label for="ponto-eval">Ponto para avaliar</label>
+                    <input type="text" id="ponto-eval" placeholder="Ex: 2.5" value="2.5">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="executarLagrange()">
+                        <span class="btn-icon">📈</span>
+                        Interpolação de Lagrange
+                    </button>
+                    <button class="btn btn-secondary" onclick="executarMinimosQuadrados()">
+                        <span class="btn-icon">📉</span>
+                        Mínimos Quadrados
+                    </button>
+                    <button class="btn btn-ghost" onclick="limparInterpolacao()">
+                        <span class="btn-icon">🗑️</span>
+                        Limpar
+                    </button>
+                </div>
+
+                <div id="resultado-interpolacao" class="result-box"></div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Integração -->
+        <div id="integracao" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Integração Numérica</h2>
+                <p class="card-description">Calcule integrais definidas usando métodos numéricos</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="limite-a">Limite Inferior (a)</label>
+                        <input type="text" id="limite-a" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="limite-b">Limite Superior (b)</label>
+                        <input type="text" id="limite-b" placeholder="1" value="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="num-intervalos">Número de Intervalos (n)</label>
+                    <input type="number" id="num-intervalos" placeholder="100" value="100">
+                </div>
+
+                <div class="info-box">
+                    <strong>ℹ️ Nota:</strong> A função sendo integrada está definida no backend Python.
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="executarTrapezio()">
+                        <span class="btn-icon">📊</span>
+                        Método do Trapézio
+                    </button>
+                    <button class="btn btn-secondary" onclick="executarSimpson()">
+                        <span class="btn-icon">📊</span>
+                        Método de Simpson
+                    </button>
+                    <button class="btn btn-ghost" onclick="limparIntegracao()">
+                        <span class="btn-icon">🗑️</span>
+                        Limpar
+                    </button>
+                </div>
+
+                <div id="resultado-integracao" class="result-box"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Trabalho 2 - Cálculo Numérico</p>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Processando...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

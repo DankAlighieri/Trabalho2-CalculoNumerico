@@ -3,6 +3,12 @@ RESOLUÇÃO DOS PROBLEMAS DA LISTA DE EXERCÍCIOS
 """
 
 import numpy as np
+import sys
+import os
+
+# Adicionar pasta metodos ao path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'metodos'))
+
 import metodos_diretos as md
 import metodos_iterativos as mi
 import interpolacao_minimos_quadrados as imq
