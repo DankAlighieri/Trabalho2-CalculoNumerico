@@ -145,7 +145,9 @@ def lagrange():
         y = np.array(dados['y'], dtype=float)
         x_eval = float(dados['xEval'])
         
-        y_eval = imq.interpolacao_lagrange(x, y, x_eval)
+        # Criar função interpoladora e avaliar no ponto
+        P = imq.interpolacao_lagrange(x, y)
+        y_eval = P(x_eval)
         
         return jsonify({
             'yEval': float(y_eval),
