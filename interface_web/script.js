@@ -49,6 +49,21 @@ function parsearMatriz(texto) {
     return matriz;
 }
 
+function validarMatrizQuadradaEAvaliacao(A, b) {
+    if (!Array.isArray(A) || A.length === 0) {
+        throw new Error('Matriz A inválida');
+    }
+    const n = A.length;
+    for (let i = 0; i < n; i++) {
+        if (!Array.isArray(A[i]) || A[i].length !== n) {
+            throw new Error('Matriz A deve ser quadrada (nxn)');
+        }
+    }
+    if (!Array.isArray(b) || b.length !== n) {
+        throw new Error('Vetor b deve ter o mesmo tamanho que A');
+    }
+}
+
 function parsearVetor(texto) {
     return texto.split(',').map(x => parseFloat(x.trim()));
 }
@@ -104,6 +119,14 @@ async function executarGauss() {
         const A = parsearMatriz(matrizTexto);
         const b = parsearVetor(vetorTexto);
 
+        // Validação cliente
+        try {
+            validarMatrizQuadradaEAvaliacao(A, b);
+        } catch (e) {
+            exibirErro('resultado-diretos', e.message);
+            return;
+        }
+
         const resultado = await chamarPython('gauss', { A, b });
 
         if (resultado.erro) {
@@ -130,6 +153,14 @@ async function executarLU() {
 
         const A = parsearMatriz(matrizTexto);
         const b = parsearVetor(vetorTexto);
+
+        // Validação cliente
+        try {
+            validarMatrizQuadradaEAvaliacao(A, b);
+        } catch (e) {
+            exibirErro('resultado-diretos', e.message);
+            return;
+        }
 
         const resultado = await chamarPython('lu', { A, b });
 
@@ -180,6 +211,14 @@ async function executarGaussSeidel() {
         const A = parsearMatriz(matrizTexto);
         const b = parsearVetor(vetorTexto);
 
+        // Validação básica
+        try {
+            validarMatrizQuadradaEAvaliacao(A, b);
+        } catch (e) {
+            exibirErro('resultado-iterativos', e.message);
+            return;
+        }
+
         const resultado = await chamarPython('gauss-seidel', { A, b, tol, maxIter });
 
         if (resultado.erro) {
@@ -210,6 +249,14 @@ async function executarJacobi() {
 
         const A = parsearMatriz(matrizTexto);
         const b = parsearVetor(vetorTexto);
+
+        // Validação básica
+        try {
+            validarMatrizQuadradaEAvaliacao(A, b);
+        } catch (e) {
+            exibirErro('resultado-iterativos', e.message);
+            return;
+        }
 
         const resultado = await chamarPython('jacobi', { A, b, tol, maxIter });
 
@@ -308,8 +355,9 @@ async function executarTrapezio() {
         const a = parseFloat(document.getElementById('limite-a').value);
         const b = parseFloat(document.getElementById('limite-b').value);
         const n = parseInt(document.getElementById('num-intervalos').value);
+        const func = document.getElementById('funcao-integracao')?.value || '';
 
-        const resultado = await chamarPython('trapezio', { a, b, n });
+        const resultado = await chamarPython('trapezio', { a, b, n, func });
 
         if (resultado.erro) {
             exibirErro('resultado-integracao', resultado.erro);
@@ -317,6 +365,7 @@ async function executarTrapezio() {
         }
 
         let output = '✓ MÉTODO DO TRAPÉZIO\n\n';
+        output += `Função: ${resultado.funcao || 'x**2 (padrão)'}\n`;
         output += `Intervalo: [${a}, ${b}]\n`;
         output += `Número de intervalos: ${n}\n`;
         output += `Resultado: ${resultado.valor.toFixed(10)}`;
@@ -332,15 +381,23 @@ async function executarSimpson() {
         const a = parseFloat(document.getElementById('limite-a').value);
         const b = parseFloat(document.getElementById('limite-b').value);
         const n = parseInt(document.getElementById('num-intervalos').value);
+        const func = document.getElementById('funcao-integracao')?.value || '';
 
-        const resultado = await chamarPython('simpson', { a, b, n });
+        // A implementação disponível no backend é Simpson 1/3 (n deve ser par)
+        if (n % 2 !== 0) {
+            exibirErro('resultado-integracao', 'Para Simpson 1/3, n deve ser um número par.');
+            return;
+        }
+
+        const resultado = await chamarPython('simpson', { a, b, n, func });
 
         if (resultado.erro) {
             exibirErro('resultado-integracao', resultado.erro);
             return;
         }
 
-        let output = '✓ MÉTODO DE SIMPSON\n\n';
+        let output = '✓ MÉTODO DE SIMPSON 1/3\n\n';
+        output += `Função: ${resultado.funcao || 'x**2 (padrão)'}\n`;
         output += `Intervalo: [${a}, ${b}]\n`;
         output += `Número de intervalos: ${n}\n`;
         output += `Resultado: ${resultado.valor.toFixed(10)}`;
@@ -354,6 +411,67 @@ async function executarSimpson() {
 function limparIntegracao() {
     document.getElementById('resultado-integracao').textContent = '';
     document.getElementById('resultado-integracao').className = 'result-box';
+}
+
+// ===================================
+// CARREGAR EXEMPLOS
+// ===================================
+
+function carregarExemploDiretos() {
+    const sel = document.getElementById('exemplo-diretos');
+    const val = sel.value;
+    
+    if (val === 'produtos') {
+        // PROBLEMA 1: Produção de componentes eletrônicos
+        // Sistema: 4T + 3R + 2C = 960 (cobre)
+        //          1T + 3R + 1C = 510 (zinco)
+        //          2T + 1R + 3C = 610 (vidro)
+        document.getElementById('matriz-a').value = '4, 3, 2\n1, 3, 1\n2, 1, 3';
+        document.getElementById('vetor-b').value = '960, 510, 610';
+        exibirResultado('resultado-diretos', 'Exemplo carregado: Produção de componentes eletrônicos\n\nSistema:\n4T + 3R + 2C = 960 (cobre)\n1T + 3R + 1C = 510 (zinco)\n2T + 1R + 3C = 610 (vidro)\n\nClique em "Eliminação de Gauss" ou "Fatoração LU" para resolver.', 'success');
+    }
+}
+
+function carregarExemploIterativos() {
+    const sel = document.getElementById('exemplo-iterativos');
+    const val = sel.value;
+    
+    if (val === 'circuito') {
+        // PROBLEMA 3: Circuito elétrico com resistores
+        document.getElementById('matriz-iter').value = '8.5, -2.5, 0, 0\n-2.5, 10.3, -3, 0\n0, -3, 12, -4\n0, 0, -4, 11';
+        document.getElementById('vetor-iter').value = '16, 0, 0, 14';
+        document.getElementById('tolerancia').value = '0.0001';
+        document.getElementById('max-iter').value = '1000';
+        exibirResultado('resultado-iterativos', 'Exemplo carregado: Circuito elétrico com resistores\n\nClique em "Gauss-Seidel" ou "Jacobi" para resolver.', 'success');
+    }
+}
+
+function carregarExemploInterpolacao() {
+    const sel = document.getElementById('exemplo-interpolacao');
+    const val = sel.value;
+    
+    if (val === 'queda_tensao') {
+        // PROBLEMA 2: Queda de voltagem em resistor
+        document.getElementById('pontos-x').value = '0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00';
+        document.getElementById('pontos-y').value = '0.28, 0.67, 0.97, 1.42, 1.88, 6.0, 8.0';
+        document.getElementById('ponto-eval').value = '0.85';
+        exibirResultado('resultado-interpolacao', 'Exemplo carregado: Queda de voltagem em resistor\n\nPontos de corrente e voltagem carregados.\nPonto de avaliação: 0.85A\n\nClique em "Interpolação de Lagrange" para calcular.', 'success');
+    }
+}
+
+function carregarExemploIntegracao() {
+    const sel = document.getElementById('exemplo-integracao');
+    const val = sel.value;
+    
+    if (val === 'area_rio') {
+        // PROBLEMA 2: Área de um rio entre margens
+        // Usa interpolação de Lagrange sobre os pontos, não função direta
+        document.getElementById('limite-a').value = '0';
+        document.getElementById('limite-b').value = '40';
+        document.getElementById('num-intervalos').value = '4';
+        document.getElementById('funcao-integracao').value = '';
+        exibirResultado('resultado-integracao', 'Exemplo carregado: Área de um rio entre margens\n\n⚠️ NOTA: Este exemplo requer interpolação de pontos dados (M1, M2).\nPara implementar completamente, o backend precisa aceitar pontos x,y e criar interpolação.\n\nIntervalo: [0, 40], n=4\n\nPor enquanto, use uma função direta como x**2 para testar a integração.', 'success');
+    }
 }
 
 // ===================================

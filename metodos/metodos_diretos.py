@@ -140,63 +140,6 @@ def resolver_lu(L: np.ndarray, U: np.ndarray, b: np.ndarray) -> np.ndarray:
     
     return x
 
-
-def decomposicao_cholesky(A: np.ndarray) -> np.ndarray:
-    """
-    Decomposição de Cholesky para matrizes simétricas positivas definidas
-    A = L * L^T
-    
-    Args:
-        A: Matriz simétrica positiva definida
-    
-    Returns:
-        L: Matriz triangular inferior
-    """
-    n = A.shape[0]
-    L = np.zeros_like(A, dtype=float)
-    
-    for i in range(n):
-        for j in range(i+1):
-            if i == j:
-                soma = sum(L[i, k]**2 for k in range(j))
-                valor = A[i, i] - soma
-                if valor <= 0:
-                    raise ValueError("Matriz não é positiva definida")
-                L[i, j] = np.sqrt(valor)
-            else:
-                soma = sum(L[i, k] * L[j, k] for k in range(j))
-                L[i, j] = (A[i, j] - soma) / L[j, j]
-    
-    return L
-
-
-def resolver_cholesky(L: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """
-    Resolve sistema Ax = b usando decomposição de Cholesky
-    onde A = L * L^T
-    
-    Args:
-        L: Matriz triangular inferior da decomposição
-        b: Vetor de termos independentes
-    
-    Returns:
-        Vetor solução x
-    """
-    n = len(b)
-    
-    # Resolve Ly = b
-    y = np.zeros(n)
-    for i in range(n):
-        y[i] = (b[i] - np.dot(L[i, :i], y[:i])) / L[i, i]
-    
-    # Resolve L^T x = y
-    x = np.zeros(n)
-    for i in range(n-1, -1, -1):
-        x[i] = (y[i] - np.dot(L[i+1:, i], x[i+1:])) / L[i, i]
-    
-    return x
-
-
 def teste_metodos_diretos():
     """Testa os métodos diretos com exemplos"""
     print("=" * 60)
@@ -249,30 +192,6 @@ def teste_metodos_diretos():
     x_lu = resolver_lu(L, U, b)
     print(f"\nSolução: {x_lu}")
     print(f"Erro: {np.linalg.norm(np.dot(A, x_lu) - b):.2e}")
-    
-    # Decomposição de Cholesky (matriz simétrica positiva definida)
-    print("\n" + "-" * 60)
-    print("4. DECOMPOSIÇÃO DE CHOLESKY")
-    print("-" * 60)
-    A_spd = np.array([[4, 2, 2],
-                      [2, 5, 1],
-                      [2, 1, 6]], dtype=float)
-    b_spd = np.array([8, 8, 9], dtype=float)
-    
-    print("Matriz simétrica positiva definida:")
-    print(A_spd)
-    print(f"b = {b_spd}")
-    
-    L_chol = decomposicao_cholesky(A_spd)
-    print("\nL =")
-    print(L_chol)
-    print(f"\nVerificação L*L^T = A:")
-    print(f"Erro: {np.linalg.norm(np.dot(L_chol, L_chol.T) - A_spd):.2e}")
-    
-    x_chol = resolver_cholesky(L_chol, b_spd)
-    print(f"\nSolução: {x_chol}")
-    print(f"Erro: {np.linalg.norm(np.dot(A_spd, x_chol) - b_spd):.2e}")
-
 
 if __name__ == "__main__":
     teste_metodos_diretos()

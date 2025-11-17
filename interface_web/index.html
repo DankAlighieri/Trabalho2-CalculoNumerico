@@ -55,6 +55,14 @@
                     <input type="text" id="vetor-b" placeholder="Ex: 960, 510, 610" value="960, 510, 610">
                 </div>
 
+                <div class="form-group">
+                    <label for="exemplo-diretos">Carregar Exemplo</label>
+                    <select id="exemplo-diretos" onchange="carregarExemploDiretos()">
+                        <option value="">-- Selecione um exemplo --</option>
+                        <option value="produtos">Produção de componentes eletrônicos</option>
+                    </select>
+                </div>
+
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="executarGauss()">
                         <span class="btn-icon">⚡</span>
@@ -105,6 +113,14 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="exemplo-iterativos">Carregar Exemplo</label>
+                    <select id="exemplo-iterativos" onchange="carregarExemploIterativos()">
+                        <option value="">-- Selecione um exemplo --</option>
+                        <option value="circuito">Circuito elétrico com resistores</option>
+                    </select>
+                </div>
+
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="executarGaussSeidel()">
                         <span class="btn-icon">🔄</span>
@@ -143,6 +159,14 @@
                 <div class="form-group">
                     <label for="ponto-eval">Ponto para avaliar</label>
                     <input type="text" id="ponto-eval" placeholder="Ex: 2.5" value="2.5">
+                </div>
+
+                <div class="form-group">
+                    <label for="exemplo-interpolacao">Carregar Exemplo</label>
+                    <select id="exemplo-interpolacao" onchange="carregarExemploInterpolacao()">
+                        <option value="">-- Selecione um exemplo --</option>
+                        <option value="queda_tensao">Queda de voltagem em resistor</option>
+                    </select>
                 </div>
 
                 <div class="button-group">
@@ -186,8 +210,21 @@
                     <input type="number" id="num-intervalos" placeholder="100" value="100">
                 </div>
 
-                <div class="info-box">
-                    <strong>ℹ️ Nota:</strong> A função sendo integrada está definida no backend Python.
+                <div class="form-group">
+                    <label for="funcao-integracao">Função a integrar (para exemplos customizados)</label>
+                    <input type="text" id="funcao-integracao" placeholder="Opcional: deixe vazio para usar interpolação de pontos">
+                    <p class="info-text" style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                        ℹ️ Para funções simples, use sintaxe Python: x**2, sin(x), exp(x), etc. 
+                        Para o exemplo do rio, deixe vazio para usar interpolação de Lagrange.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="exemplo-integracao">Carregar Exemplo</label>
+                    <select id="exemplo-integracao" onchange="carregarExemploIntegracao()">
+                        <option value="">-- Selecione um exemplo --</option>
+                        <option value="area_rio">Área de um rio entre margens (interpolação)</option>
+                    </select>
                 </div>
 
                 <div class="button-group">
@@ -197,7 +234,7 @@
                     </button>
                     <button class="btn btn-secondary" onclick="executarSimpson()">
                         <span class="btn-icon">📊</span>
-                        Método de Simpson
+                        Simpson 1/3
                     </button>
                     <button class="btn btn-ghost" onclick="limparIntegracao()">
                         <span class="btn-icon">🗑️</span>

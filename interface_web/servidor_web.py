@@ -15,9 +15,42 @@ import metodos_diretos as md
 import metodos_iterativos as mi
 import interpolacao_minimos_quadrados as imq
 import integracao_numerica as intn
+import math
 
 app = Flask(__name__)
 CORS(app)  # Permitir requisições do frontend
+
+# ===================================
+# FUNÇÕES AUXILIARES
+# ===================================
+
+def criar_funcao_segura(expressao: str):
+    """
+    Cria uma função Python segura a partir de uma expressão string.
+    Permite apenas funções matemáticas do módulo math e operações básicas.
+    """
+    if not expressao or not isinstance(expressao, str):
+        return None
+    
+    # Namespace seguro com funções matemáticas
+    namespace_seguro = {
+        'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
+        'exp': math.exp, 'log': math.log, 'sqrt': math.sqrt,
+        'pi': math.pi, 'e': math.e,
+        'abs': abs, 'pow': pow
+    }
+    
+    try:
+        # Compilar expressão
+        codigo = compile(expressao, '<string>', 'eval')
+        
+        def f(x):
+            namespace_seguro['x'] = x
+            return eval(codigo, {'__builtins__': {}}, namespace_seguro)
+        
+        return f
+    except Exception as e:
+        raise ValueError(f'Erro ao criar função: {str(e)}')
 
 # ===================================
 # ROTA PARA SERVIR A INTERFACE
@@ -196,14 +229,22 @@ def trapezio():
         b = float(dados['b'])
         n = int(dados['n'])
         
-        # Função padrão para integrar (exemplo: x^2)
-        def f(x):
-            return x**2
+        # Verificar se usuário enviou função customizada
+        func_expr = dados.get('func', '').strip()
+        
+        if func_expr:
+            # Usar função customizada do usuário
+            f = criar_funcao_segura(func_expr)
+        else:
+            # Função padrão para integrar (exemplo: x^2)
+            def f(x):
+                return x**2
         
         resultado = intn.regra_trapezio(f, a, b, n)
         
         return jsonify({
             'valor': float(resultado),
+            'funcao': func_expr if func_expr else 'x**2 (padrão)',
             'sucesso': True
         })
     except Exception as e:
@@ -214,21 +255,29 @@ def trapezio():
 
 @app.route('/simpson', methods=['POST'])
 def simpson():
-    """Método de Simpson"""
+    """Método de Simpson 1/3"""
     try:
         dados = request.json
         a = float(dados['a'])
         b = float(dados['b'])
         n = int(dados['n'])
         
-        # Função padrão para integrar (exemplo: x^2)
-        def f(x):
-            return x**2
+        # Verificar se usuário enviou função customizada
+        func_expr = dados.get('func', '').strip()
+        
+        if func_expr:
+            # Usar função customizada do usuário
+            f = criar_funcao_segura(func_expr)
+        else:
+            # Função padrão para integrar (exemplo: x^2)
+            def f(x):
+                return x**2
         
         resultado = intn.regra_simpson_1_3(f, a, b, n)
         
         return jsonify({
             'valor': float(resultado),
+            'funcao': func_expr if func_expr else 'x**2 (padrão)',
             'sucesso': True
         })
     except Exception as e:

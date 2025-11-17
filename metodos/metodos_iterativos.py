@@ -110,55 +110,6 @@ def metodo_gauss_seidel(A: np.ndarray, b: np.ndarray, x0: Optional[np.ndarray] =
     print(f"Aviso: Número máximo de iterações ({max_iter}) atingido")
     return x, max_iter, erros
 
-
-def metodo_sor(A: np.ndarray, b: np.ndarray, omega: float = 1.25,
-               x0: Optional[np.ndarray] = None, tol: float = 1e-6,
-               max_iter: int = 1000) -> Tuple[np.ndarray, int, list]:
-    """
-    Resolve sistema linear Ax = b usando o método SOR
-    (Successive Over-Relaxation)
-    
-    Args:
-        A: Matriz de coeficientes (n x n)
-        b: Vetor de termos independentes
-        omega: Fator de relaxação (1 < omega < 2 para sobre-relaxação)
-        x0: Aproximação inicial (se None, usa vetor zero)
-        tol: Tolerância para critério de parada
-        max_iter: Número máximo de iterações
-    
-    Returns:
-        x: Vetor solução
-        num_iter: Número de iterações realizadas
-        erros: Lista com histórico de erros
-    """
-    n = len(b)
-    x = np.zeros(n) if x0 is None else x0.copy()
-    x_old = x.copy()
-    erros = []
-    
-    for k in range(max_iter):
-        for i in range(n):
-            # Calcula valor de Gauss-Seidel
-            soma = sum(A[i, j] * x[j] for j in range(n) if j != i)
-            x_gs = (b[i] - soma) / A[i, i]
-            
-            # Aplica fator de relaxação
-            x[i] = omega * x_gs + (1 - omega) * x[i]
-        
-        # Calcula erro relativo
-        erro = np.linalg.norm(x - x_old) / np.linalg.norm(x)
-        erros.append(erro)
-        
-        # Verifica convergência
-        if erro < tol:
-            return x, k + 1, erros
-        
-        x_old = x.copy()
-    
-    print(f"Aviso: Número máximo de iterações ({max_iter}) atingido")
-    return x, max_iter, erros
-
-
 def calcular_residuo(A: np.ndarray, x: np.ndarray, b: np.ndarray) -> float:
     """
     Calcula o resíduo ||Ax - b||
@@ -219,16 +170,6 @@ def teste_metodos_iterativos():
     print(f"Resíduo final: {calcular_residuo(A, x_gs, b):.2e}")
     print(f"Erro final: {erros_gs[-1]:.2e}")
     
-    # Método SOR
-    print("\n" + "-" * 60)
-    print("3. MÉTODO SOR (ω = 1.1)")
-    print("-" * 60)
-    x_sor, iter_sor, erros_sor = metodo_sor(A, b, omega=1.1, tol=1e-6)
-    print(f"Solução: {x_sor}")
-    print(f"Iterações: {iter_sor}")
-    print(f"Resíduo final: {calcular_residuo(A, x_sor, b):.2e}")
-    print(f"Erro final: {erros_sor[-1]:.2e}")
-    
     # Comparação
     print("\n" + "-" * 60)
     print("COMPARAÇÃO DE CONVERGÊNCIA")
@@ -237,19 +178,6 @@ def teste_metodos_iterativos():
     print("-" * 60)
     print(f"{'Jacobi':<20} {iter_jacobi:<12} {calcular_residuo(A, x_jacobi, b):<15.2e}")
     print(f"{'Gauss-Seidel':<20} {iter_gs:<12} {calcular_residuo(A, x_gs, b):<15.2e}")
-    print(f"{'SOR (ω=1.1)':<20} {iter_sor:<12} {calcular_residuo(A, x_sor, b):<15.2e}")
-    
-    # Teste com diferentes valores de omega para SOR
-    print("\n" + "-" * 60)
-    print("4. TESTE SOR COM DIFERENTES ω")
-    print("-" * 60)
-    omegas = [0.5, 0.8, 1.0, 1.2, 1.5, 1.8]
-    print(f"{'ω':<10} {'Iterações':<12} {'Resíduo':<15}")
-    print("-" * 60)
-    for omega in omegas:
-        x_sor_test, iter_test, _ = metodo_sor(A, b, omega=omega, tol=1e-6)
-        residuo_test = calcular_residuo(A, x_sor_test, b)
-        print(f"{omega:<10.1f} {iter_test:<12} {residuo_test:<15.2e}")
 
 
 if __name__ == "__main__":
