@@ -341,6 +341,33 @@ async function executarMinimosQuadrados() {
     }
 }
 
+async function executarNewton() {
+    try {
+        const xTexto = document.getElementById('pontos-x').value;
+        const yTexto = document.getElementById('pontos-y').value;
+        const xEval = parseFloat(document.getElementById('ponto-eval').value);
+
+        const x = parsearVetor(xTexto);
+        const y = parsearVetor(yTexto);
+
+        const resultado = await chamarPython('interpolacao_newton', { x, y, xEval });
+
+        if (resultado.erro) {
+            exibirErro('resultado-interpolacao', resultado.erro);
+            return;
+        }
+
+        let output = '✓ INTERPOLAÇÃO DE NEWTON\n\n';   
+        output += `Ponto avaliado: x = ${xEval}\n`;
+        output += `Valor interpolado: y = ${resultado.yEval.toFixed(8)}`;
+
+        exibirResultado('resultado-interpolacao', output);
+    } catch (error) {
+        exibirErro('resultado-interpolacao', error.message);
+    }
+}
+
+
 function limparInterpolacao() {
     document.getElementById('resultado-interpolacao').textContent = '';
     document.getElementById('resultado-interpolacao').className = 'result-box';
@@ -494,9 +521,9 @@ function carregarExemploInterpolacao() {
     
     if (val === 'queda_tensao') {
         // PROBLEMA 2: Queda de voltagem em resistor
-        document.getElementById('pontos-x').value = '0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00';
-        document.getElementById('pontos-y').value = '0.28, 0.67, 0.97, 1.42, 1.88, 6.0, 8.0';
-        document.getElementById('ponto-eval').value = '0.85';
+        document.getElementById('pontos-x').value = '0.25, 0.75, 1.25, 1.50, 2.00';
+        document.getElementById('pontos-y').value = '-0.45, -0.60, 0.70, 1.88, 6.0';
+        document.getElementById('ponto-eval').value = '1.15';
         exibirResultado('resultado-interpolacao', 'Exemplo carregado: Queda de voltagem em resistor\n\nPontos de corrente e voltagem carregados.\nPonto de avaliação: 0.85A\n\nClique em "Interpolação de Lagrange" para calcular.', 'success');
     }
 }

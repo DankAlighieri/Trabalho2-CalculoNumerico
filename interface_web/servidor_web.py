@@ -216,6 +216,28 @@ def minimos_quadrados():
             'sucesso': False
         })
 
+@app.route('/interpolacao_newton', methods=['POST'])
+def interpolacao_newton():
+    """Interpolação de Newton"""
+    try:
+        dados = request.json
+        x = np.array(dados['x'], dtype=float)
+        y = np.array(dados['y'], dtype=float)
+        x_eval = float(dados['xEval'])
+        
+        P, coeficientes = imq.interpolacao_newton(x, y)
+        y_eval = P(x_eval)  # Avalia a função interpoladora no ponto x_eval 
+       
+        return jsonify({
+            'yEval': float(y_eval),
+            'sucesso': True
+        })
+    except Exception as e:
+        return jsonify({
+            'erro': str(e),
+            'sucesso': False
+        })  
+
 # ===================================
 # ROTAS - INTEGRAÇÃO NUMÉRICA
 # ===================================
@@ -318,10 +340,10 @@ def simpson():
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("🚀 SERVIDOR BACKEND - CÁLCULO NUMÉRICO")
+    print(" SERVIDOR BACKEND - CÁLCULO NUMÉRICO")
     print("=" * 60)
-    print("📡 Servidor rodando em: http://localhost:5000")
-    print("🌐 Acesse http://localhost:5000 no navegador")
+    print(" Servidor rodando em: http://localhost:5000")
+    print("Acesse http://localhost:5000 no navegador")
     print("=" * 60)
     
     app.run(debug=True, host='0.0.0.0', port=5000)

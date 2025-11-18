@@ -75,12 +75,12 @@ print("=" * 80)
 print("\nPROBLEMA 2: Queda de voltagem em resistor")
 print("-" * 80)
 
-correntes = np.array([0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00])
-voltagens = np.array([0.28, 0.67, 0.97, 1.42, 1.88, 6.0, 8.0])
+correntes = np.array([0.25, 0.75, 1.25, 1.50, 2.00])
+voltagens = np.array([0.45, 0.60, 0.70, 1.88, 6.0])
 
 # Interpolação de Lagrange
 P_volt = imq.interpolacao_lagrange(correntes, voltagens)
-print(f"Interpolação Lagrange - V(0.85A) = {P_volt(0.85):.2f}V")
+print(f"Interpolação Lagrange - V(1.15A) = {P_volt(1.15):.2f}V")
 
 # Ajuste polinomial grau 2
 coef_2 = imq.minimos_quadrados_polinomial(correntes, voltagens, 2)
