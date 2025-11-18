@@ -52,11 +52,12 @@ print("=" * 80)
 print("\nPROBLEMA 3: Circuito elétrico com resistores")
 print("-" * 80)
 
-A_circuito = np.array([[8.5, -2.5, 0, 0],
-                       [-2.5, 10.3, -3, 0],
-                       [0, -3, 12, -4],
-                       [0, 0, -4, 11]], dtype=float)
-b_circuito = np.array([16, 0, 0, 14], dtype=float)
+A_circuito = np.array([[-9.5, 2.5, 0, 2, 0],
+                        [2.5,-11,3.5,0,5],
+                        [0,3.5,-15.5,0,4],
+                        [2,0,0,-7,3],
+                        [0,5,4,3,-12]], dtype=float)
+b_circuito = np.array([-12, 16, -14, -10, 30], dtype=float)
 
 x_circuito, iter_circ, _ = mi.metodo_gauss_seidel(A_circuito, b_circuito, tol=0.0001)
 print(f"Solução (tensões): V1={x_circuito[0]:.4f}V, V2={x_circuito[1]:.4f}V, V3={x_circuito[2]:.4f}V, V4={x_circuito[3]:.4f}V")

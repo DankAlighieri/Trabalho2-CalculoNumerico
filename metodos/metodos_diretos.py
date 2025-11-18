@@ -1,6 +1,6 @@
 """
 MÉTODOS DIRETOS PARA SISTEMAS DE EQUAÇÕES LINEARES
-Implementa: Eliminação de Gauss, Gauss-Jordan, Decomposição LU
+Implementa: Eliminação de Gauss, Decomposição LU
 """
 
 import numpy as np
@@ -46,45 +46,6 @@ def eliminacao_gauss(A: np.ndarray, b: np.ndarray, pivoteamento: bool = True) ->
         x[i] = (Ab[i, -1] - np.dot(Ab[i, i+1:n], x[i+1:n])) / Ab[i, i]
     
     return x
-
-
-def gauss_jordan(A: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """
-    Resolve sistema linear Ax = b usando Gauss-Jordan
-    
-    Args:
-        A: Matriz de coeficientes (n x n)
-        b: Vetor de termos independentes (n x 1)
-    
-    Returns:
-        Vetor solução x
-    """
-    n = len(b)
-    # Cria matriz aumentada
-    Ab = np.column_stack([A.astype(float), b.astype(float)])
-    
-    # Transformação para forma escalonada reduzida
-    for k in range(n):
-        # Pivoteamento parcial
-        max_idx = np.argmax(np.abs(Ab[k:n, k])) + k
-        if max_idx != k:
-            Ab[[k, max_idx]] = Ab[[max_idx, k]]
-        
-        # Verifica pivô zero
-        if abs(Ab[k, k]) < 1e-10:
-            raise ValueError(f"Pivô zero encontrado na linha {k}")
-        
-        # Normaliza linha do pivô
-        Ab[k] = Ab[k] / Ab[k, k]
-        
-        # Eliminação (acima e abaixo do pivô)
-        for i in range(n):
-            if i != k:
-                fator = Ab[i, k]
-                Ab[i] -= fator * Ab[k]
-    
-    return Ab[:, -1]
-
 
 def decomposicao_lu(A: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """

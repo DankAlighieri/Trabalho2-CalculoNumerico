@@ -356,8 +356,25 @@ async function executarTrapezio() {
         const b = parseFloat(document.getElementById('limite-b').value);
         const n = parseInt(document.getElementById('num-intervalos').value);
         const func = document.getElementById('funcao-integracao')?.value || '';
+        
+        // Verificar se há pontos para interpolação
+        const pontosXTexto = document.getElementById('pontos-x-integracao')?.value || '';
+        const pontosYTexto = document.getElementById('pontos-y-integracao')?.value || '';
+        
+        let dados = { a, b, n, func };
+        
+        if (pontosXTexto && pontosYTexto) {
+            // Enviar pontos para interpolação
+            dados.pontos_x = parsearVetor(pontosXTexto);
+            dados.pontos_y = parsearVetor(pontosYTexto);
+            
+            if (dados.pontos_x.length !== dados.pontos_y.length) {
+                exibirErro('resultado-integracao', 'Os pontos X e Y devem ter o mesmo tamanho!');
+                return;
+            }
+        }
 
-        const resultado = await chamarPython('trapezio', { a, b, n, func });
+        const resultado = await chamarPython('trapezio', dados);
 
         if (resultado.erro) {
             exibirErro('resultado-integracao', resultado.erro);
@@ -369,6 +386,10 @@ async function executarTrapezio() {
         output += `Intervalo: [${a}, ${b}]\n`;
         output += `Número de intervalos: ${n}\n`;
         output += `Resultado: ${resultado.valor.toFixed(10)}`;
+        
+        if (dados.pontos_x) {
+            output += `\n\n(Usando interpolação de Lagrange com ${dados.pontos_x.length} pontos)`;
+        }
 
         exibirResultado('resultado-integracao', output);
     } catch (error) {
@@ -388,8 +409,25 @@ async function executarSimpson() {
             exibirErro('resultado-integracao', 'Para Simpson 1/3, n deve ser um número par.');
             return;
         }
+        
+        // Verificar se há pontos para interpolação
+        const pontosXTexto = document.getElementById('pontos-x-integracao')?.value || '';
+        const pontosYTexto = document.getElementById('pontos-y-integracao')?.value || '';
+        
+        let dados = { a, b, n, func };
+        
+        if (pontosXTexto && pontosYTexto) {
+            // Enviar pontos para interpolação
+            dados.pontos_x = parsearVetor(pontosXTexto);
+            dados.pontos_y = parsearVetor(pontosYTexto);
+            
+            if (dados.pontos_x.length !== dados.pontos_y.length) {
+                exibirErro('resultado-integracao', 'Os pontos X e Y devem ter o mesmo tamanho!');
+                return;
+            }
+        }
 
-        const resultado = await chamarPython('simpson', { a, b, n, func });
+        const resultado = await chamarPython('simpson', dados);
 
         if (resultado.erro) {
             exibirErro('resultado-integracao', resultado.erro);
@@ -401,6 +439,10 @@ async function executarSimpson() {
         output += `Intervalo: [${a}, ${b}]\n`;
         output += `Número de intervalos: ${n}\n`;
         output += `Resultado: ${resultado.valor.toFixed(10)}`;
+        
+        if (dados.pontos_x) {
+            output += `\n\n(Usando interpolação de Lagrange com ${dados.pontos_x.length} pontos)`;
+        }
 
         exibirResultado('resultado-integracao', output);
     } catch (error) {
@@ -438,12 +480,12 @@ function carregarExemploIterativos() {
     
     if (val === 'circuito') {
         // PROBLEMA 3: Circuito elétrico com resistores
-        document.getElementById('matriz-iter').value = '8.5, -2.5, 0, 0\n-2.5, 10.3, -3, 0\n0, -3, 12, -4\n0, 0, -4, 11';
-        document.getElementById('vetor-iter').value = '16, 0, 0, 14';
+        document.getElementById('matriz-iter').value = '-9.5, 2.5, 0, 2, 0\n2.5, -11, 3.5, 0, 5\n0, 3.5, -15.5, 0, 4\n2, 0, 0, -7, 3\n0, 5, 4, 3, -12';
+        document.getElementById('vetor-iter').value = '-12, 16, -14, -10, 30';
         document.getElementById('tolerancia').value = '0.0001';
         document.getElementById('max-iter').value = '1000';
         exibirResultado('resultado-iterativos', 'Exemplo carregado: Circuito elétrico com resistores\n\nClique em "Gauss-Seidel" ou "Jacobi" para resolver.', 'success');
-    }
+        }
 }
 
 function carregarExemploInterpolacao() {
@@ -465,12 +507,27 @@ function carregarExemploIntegracao() {
     
     if (val === 'area_rio') {
         // PROBLEMA 2: Área de um rio entre margens
-        // Usa interpolação de Lagrange sobre os pontos, não função direta
+        // x_rio = [0, 10, 20, 30, 40]
+        // M1 = [50.8, 86.2, 136, 72.8, 51]
+        // M2 = [113.6, 144.5, 185, 171.2, 95.3]
+        // larguras = M2 - M1 = [62.8, 58.3, 49, 98.4, 44.3]
+        
         document.getElementById('limite-a').value = '0';
         document.getElementById('limite-b').value = '40';
         document.getElementById('num-intervalos').value = '4';
         document.getElementById('funcao-integracao').value = '';
-        exibirResultado('resultado-integracao', 'Exemplo carregado: Área de um rio entre margens\n\n⚠️ NOTA: Este exemplo requer interpolação de pontos dados (M1, M2).\nPara implementar completamente, o backend precisa aceitar pontos x,y e criar interpolação.\n\nIntervalo: [0, 40], n=4\n\nPor enquanto, use uma função direta como x**2 para testar a integração.', 'success');
+        document.getElementById('pontos-x-integracao').value = '0, 10, 20, 30, 40';
+        document.getElementById('pontos-y-integracao').value = '62.8, 58.3, 49, 98.4, 44.3';
+        
+        exibirResultado('resultado-integracao', 
+            '✓ Exemplo carregado: Área de um rio entre margens\n\n' +
+            'Dados do problema:\n' +
+            'x = [0, 10, 20, 30, 40] m\n' +
+            'Larguras (M2-M1) = [62.8, 58.3, 49, 98.4, 44.3] m\n\n' +
+            'Intervalo: [0, 40], n=4\n\n' +
+            'O backend irá usar interpolação de Lagrange sobre estes pontos e então integrar.\n\n' +
+            'Clique em "Trapézio" ou "Simpson 1/3" para calcular a área.', 
+            'success');
     }
 }
 

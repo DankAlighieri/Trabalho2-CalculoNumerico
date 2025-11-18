@@ -1,8 +1,3 @@
-"""
-INTEGRAÇÃO NUMÉRICA
-Implementa: Regra do Trapézio, Regra de Simpson (1/3 e 3/8), Quadratura de Gauss
-"""
-
 import numpy as np
 from typing import Callable, Tuple
 import math
@@ -63,16 +58,6 @@ def regra_simpson_1_3(f: Callable, a: float, b: float, n: int = 2) -> float:
     return (h / 3) * soma
 
 def erro_integracao(aproximado: float, exato: float) -> Tuple[float, float]:
-    """
-    Calcula erro absoluto e relativo
-    
-    Args:
-        aproximado: Valor aproximado da integral
-        exato: Valor exato da integral
-    
-    Returns:
-        Erro absoluto e erro relativo percentual
-    """
     erro_abs = abs(exato - aproximado)
     erro_rel = (erro_abs / abs(exato)) * 100 if exato != 0 else float('inf')
     return erro_abs, erro_rel

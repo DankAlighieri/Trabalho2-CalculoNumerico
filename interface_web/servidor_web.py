@@ -229,22 +229,35 @@ def trapezio():
         b = float(dados['b'])
         n = int(dados['n'])
         
-        # Verificar se usuário enviou função customizada
-        func_expr = dados.get('func', '').strip()
+        # Verificar se usuário enviou pontos para interpolação
+        pontos_x = dados.get('pontos_x')
+        pontos_y = dados.get('pontos_y')
         
-        if func_expr:
-            # Usar função customizada do usuário
-            f = criar_funcao_segura(func_expr)
+        if pontos_x and pontos_y:
+            # Usar interpolação de Lagrange sobre os pontos
+            x_array = np.array(pontos_x, dtype=float)
+            y_array = np.array(pontos_y, dtype=float)
+            f = imq.interpolacao_lagrange(x_array, y_array)
+            funcao_desc = f'Interpolação de Lagrange com {len(pontos_x)} pontos'
         else:
-            # Função padrão para integrar (exemplo: x^2)
-            def f(x):
-                return x**2
+            # Verificar se usuário enviou função customizada
+            func_expr = dados.get('func', '').strip()
+            
+            if func_expr:
+                # Usar função customizada do usuário
+                f = criar_funcao_segura(func_expr)
+                funcao_desc = func_expr
+            else:
+                # Função padrão para integrar (exemplo: x^2)
+                def f(x):
+                    return x**2
+                funcao_desc = 'x**2 (padrão)'
         
         resultado = intn.regra_trapezio(f, a, b, n)
         
         return jsonify({
             'valor': float(resultado),
-            'funcao': func_expr if func_expr else 'x**2 (padrão)',
+            'funcao': funcao_desc,
             'sucesso': True
         })
     except Exception as e:
@@ -262,22 +275,35 @@ def simpson():
         b = float(dados['b'])
         n = int(dados['n'])
         
-        # Verificar se usuário enviou função customizada
-        func_expr = dados.get('func', '').strip()
+        # Verificar se usuário enviou pontos para interpolação
+        pontos_x = dados.get('pontos_x')
+        pontos_y = dados.get('pontos_y')
         
-        if func_expr:
-            # Usar função customizada do usuário
-            f = criar_funcao_segura(func_expr)
+        if pontos_x and pontos_y:
+            # Usar interpolação de Lagrange sobre os pontos
+            x_array = np.array(pontos_x, dtype=float)
+            y_array = np.array(pontos_y, dtype=float)
+            f = imq.interpolacao_lagrange(x_array, y_array)
+            funcao_desc = f'Interpolação de Lagrange com {len(pontos_x)} pontos'
         else:
-            # Função padrão para integrar (exemplo: x^2)
-            def f(x):
-                return x**2
+            # Verificar se usuário enviou função customizada
+            func_expr = dados.get('func', '').strip()
+            
+            if func_expr:
+                # Usar função customizada do usuário
+                f = criar_funcao_segura(func_expr)
+                funcao_desc = func_expr
+            else:
+                # Função padrão para integrar (exemplo: x^2)
+                def f(x):
+                    return x**2
+                funcao_desc = 'x**2 (padrão)'
         
         resultado = intn.regra_simpson_1_3(f, a, b, n)
         
         return jsonify({
             'valor': float(resultado),
-            'funcao': func_expr if func_expr else 'x**2 (padrão)',
+            'funcao': funcao_desc,
             'sucesso': True
         })
     except Exception as e:

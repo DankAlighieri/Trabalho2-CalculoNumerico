@@ -211,11 +211,27 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="funcao-integracao">Função a integrar (para exemplos customizados)</label>
-                    <input type="text" id="funcao-integracao" placeholder="Opcional: deixe vazio para usar interpolação de pontos">
+                    <label for="funcao-integracao">Função a integrar (opcional)</label>
+                    <input type="text" id="funcao-integracao" placeholder="Ex: x**2, sin(x), exp(x)">
                     <p class="info-text" style="font-size: 0.85em; color: #666; margin-top: 5px;">
-                        ℹ️ Para funções simples, use sintaxe Python: x**2, sin(x), exp(x), etc. 
-                        Para o exemplo do rio, deixe vazio para usar interpolação de Lagrange.
+                        ℹ️ Use sintaxe Python: x**2, sin(x), exp(x), etc. 
+                        Deixe vazio se usar pontos para interpolação.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="pontos-x-integracao">Pontos X para Interpolação (opcional)</label>
+                    <input type="text" id="pontos-x-integracao" placeholder="Ex: 0, 10, 20, 30, 40">
+                    <p class="info-text" style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                        ℹ️ Valores separados por vírgula. Use junto com Pontos Y para integrar função interpolada.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="pontos-y-integracao">Pontos Y para Interpolação (opcional)</label>
+                    <input type="text" id="pontos-y-integracao" placeholder="Ex: 62.8, 58.3, 49, 98.4, 44.3">
+                    <p class="info-text" style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                        ℹ️ Valores separados por vírgula. Deve ter mesmo tamanho que Pontos X.
                     </p>
                 </div>
 
