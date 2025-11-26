@@ -8,17 +8,7 @@ from typing import Tuple, Optional
 
 
 def eliminacao_gauss(A: np.ndarray, b: np.ndarray, pivoteamento: bool = True) -> np.ndarray:
-    """
-    Resolve sistema linear Ax = b usando Eliminação de Gauss
-    
-    Args:
-        A: Matriz de coeficientes (n x n)
-        b: Vetor de termos independentes (n x 1)
-        pivoteamento: Se True, usa pivoteamento parcial
-    
-    Returns:
-        Vetor solução x
-    """
+
     n = len(b)
     # Cria matriz aumentada
     Ab = np.column_stack([A.astype(float), b.astype(float)])
@@ -48,16 +38,7 @@ def eliminacao_gauss(A: np.ndarray, b: np.ndarray, pivoteamento: bool = True) ->
     return x
 
 def decomposicao_lu(A: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Realiza decomposição LU da matriz A (A = LU)
-    
-    Args:
-        A: Matriz quadrada (n x n)
-    
-    Returns:
-        L: Matriz triangular inferior
-        U: Matriz triangular superior
-    """
+
     n = A.shape[0]
     L = np.eye(n)
     U = A.astype(float).copy()
@@ -75,18 +56,7 @@ def decomposicao_lu(A: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def resolver_lu(L: np.ndarray, U: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """
-    Resolve sistema Ax = b usando decomposição LU
-    onde A = LU, então LUx = b
-    
-    Args:
-        L: Matriz triangular inferior
-        U: Matriz triangular superior
-        b: Vetor de termos independentes
-    
-    Returns:
-        Vetor solução x
-    """
+
     n = len(b)
     
     # Resolve Ly = b (substituição progressiva)

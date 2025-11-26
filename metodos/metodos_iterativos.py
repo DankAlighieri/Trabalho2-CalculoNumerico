@@ -8,16 +8,7 @@ from typing import Tuple, Optional
 
 
 def verificar_convergencia_diagonal(A: np.ndarray) -> bool:
-    """
-    Verifica se a matriz é diagonalmente dominante
-    (condição suficiente para convergência)
-    
-    Args:
-        A: Matriz de coeficientes
-    
-    Returns:
-        True se é diagonalmente dominante
-    """
+
     n = A.shape[0]
     for i in range(n):
         diagonal = abs(A[i, i])
@@ -29,21 +20,7 @@ def verificar_convergencia_diagonal(A: np.ndarray) -> bool:
 
 def metodo_jacobi(A: np.ndarray, b: np.ndarray, x0: Optional[np.ndarray] = None,
                   tol: float = 1e-6, max_iter: int = 1000) -> Tuple[np.ndarray, int, list]:
-    """
-    Resolve sistema linear Ax = b usando o método de Jacobi
-    
-    Args:
-        A: Matriz de coeficientes (n x n)
-        b: Vetor de termos independentes
-        x0: Aproximação inicial (se None, usa vetor zero)
-        tol: Tolerância para critério de parada
-        max_iter: Número máximo de iterações
-    
-    Returns:
-        x: Vetor solução
-        num_iter: Número de iterações realizadas
-        erros: Lista com histórico de erros
-    """
+
     n = len(b)
     x = np.zeros(n) if x0 is None else x0.copy()
     x_new = np.zeros(n)
@@ -71,21 +48,6 @@ def metodo_jacobi(A: np.ndarray, b: np.ndarray, x0: Optional[np.ndarray] = None,
 
 def metodo_gauss_seidel(A: np.ndarray, b: np.ndarray, x0: Optional[np.ndarray] = None,
                         tol: float = 1e-6, max_iter: int = 1000) -> Tuple[np.ndarray, int, list]:
-    """
-    Resolve sistema linear Ax = b usando o método de Gauss-Seidel
-    
-    Args:
-        A: Matriz de coeficientes (n x n)
-        b: Vetor de termos independentes
-        x0: Aproximação inicial (se None, usa vetor zero)
-        tol: Tolerância para critério de parada
-        max_iter: Número máximo de iterações
-    
-    Returns:
-        x: Vetor solução
-        num_iter: Número de iterações realizadas
-        erros: Lista com histórico de erros
-    """
     n = len(b)
     x = np.zeros(n) if x0 is None else x0.copy()
     x_old = x.copy()
@@ -93,11 +55,11 @@ def metodo_gauss_seidel(A: np.ndarray, b: np.ndarray, x0: Optional[np.ndarray] =
     
     for k in range(max_iter):
         for i in range(n):
-            # Usa valores já atualizados na iteração atual
+
             soma = sum(A[i, j] * x[j] for j in range(n) if j != i)
             x[i] = (b[i] - soma) / A[i, i]
         
-        # Calcula erro relativo
+
         erro = np.linalg.norm(x - x_old) / np.linalg.norm(x)
         erros.append(erro)
         
@@ -111,17 +73,7 @@ def metodo_gauss_seidel(A: np.ndarray, b: np.ndarray, x0: Optional[np.ndarray] =
     return x, max_iter, erros
 
 def calcular_residuo(A: np.ndarray, x: np.ndarray, b: np.ndarray) -> float:
-    """
-    Calcula o resíduo ||Ax - b||
-    
-    Args:
-        A: Matriz de coeficientes
-        x: Vetor solução
-        b: Vetor de termos independentes
-    
-    Returns:
-        Norma do resíduo
-    """
+
     return np.linalg.norm(np.dot(A, x) - b)
 
 

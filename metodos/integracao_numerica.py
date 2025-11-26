@@ -4,41 +4,17 @@ import math
 
 
 def regra_trapezio(f: Callable, a: float, b: float, n: int = 1) -> float:
-    """
-    Integração numérica usando a Regra do Trapézio
-    
-    Args:
-        f: Função a ser integrada
-        a: Limite inferior
-        b: Limite superior
-        n: Número de subintervalos
-    
-    Returns:
-        Aproximação da integral
-    """
-    h = (b - a) / n
-    soma = (f(a) + f(b)) / 2
+    h = (b - a) / n # subintervalos
+    soma = (f(a) + f(b)) / 2 # extremos
     
     for i in range(1, n):
         x = a + i * h
-        soma += f(x)
+        soma += f(x) # pontos intermediários
     
     return h * soma
 
 
 def regra_simpson_1_3(f: Callable, a: float, b: float, n: int = 2) -> float:
-    """
-    Integração numérica usando a Regra de Simpson 1/3
-    
-    Args:
-        f: Função a ser integrada
-        a: Limite inferior
-        b: Limite superior
-        n: Número de subintervalos (deve ser par)
-    
-    Returns:
-        Aproximação da integral
-    """
     if n % 2 != 0:
         raise ValueError("n deve ser par para a Regra de Simpson 1/3")
     
